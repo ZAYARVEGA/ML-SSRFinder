@@ -1,0 +1,40 @@
+{
+  "localhost": [
+    "https://127.0.0.1:80",
+    "http://127.0.0.1:/?a=a.png",
+    "127.0.0.1",
+    "http://example.com%2F127.0.0.1",
+    "http://localhost/admin",
+    "http://127.0.0.1:80/admin",
+    "http://localhost/admin",
+    "http://localhost/templates/admin",
+    "http://127.0.0.1/internal",
+    "http://localhost:8080/config",
+    "http://localhost:3000/api/users"
+  ],
+  "aws_metadata": [
+    "http://169.254.169.254/latest/meta-data/",
+    "http://169.254.169.254/latest/meta-data/",
+    "http://169.254.169.254\\@geonode.state.gov",
+    "http://169.254.169.254/latest/meta-data/",
+    "http://169.254.169.254/latest/meta-data/iam/security-credentials/EC2CloudWatchRole",
+    "http://169.254.169.254/latest/meta-data/",
+    "http://169.254.169.254/latest/meta-data?",
+    "http://169.254.169.254/latest/meta-data/"
+  ],
+  "private_network": [
+    "http://192.168.0.1/api",
+    "http://10.0.0.5/api"
+  ],
+  "other": [
+    "http://va99zfc0lxpm75ogmcjhz8xij9pzdo.oastify.com",
+    "http://attacker.com/h1.php",
+    "https://cd7c-101-255-157-9.ngrok-free.app",
+    "http://p8yfvg6nige7z2ndagpf3v181z7pve.burpcollaborator.net:22",
+    "http://9eoecirvai3o4lsdrpqzvyia71dr1g.oastify.com/",
+    "http://[internal-service-redacted]",
+    "https://attacker.interactsh.com",
+    "http://metadata.google.internal",
+    "http://6pwo0p85qh07drdgdlr9nr9hn8tyhn.burpcollaborator.net"
+  ]
+}
