@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Neural Forger - Integration Test Suite
+ML-SSRFinder - Integration Test Suite
 
 Validates core workflows: ML inspection, parameter discovery,
 payload generation, confidence scoring, and CLI argument parsing.
 
-Tests both SSRFinder base modules and Neural Forger extension modules
+Tests both SSRFinder base modules and ML-SSRFinder extension modules
 to ensure the integrated system works correctly.
 
-Run: python3 neuralforger-test.py
+Run: python3 mlssrfinder-test.py
 """
 
 import sys
@@ -37,14 +37,14 @@ def _load(name, filename):
     return mod
 
 
-# Neural Forger extension modules (hyphenated names)
-config = _load("neuralforger_config", "neuralforger-config.py")
-detector = _load("neuralforger_detector", "neuralforger-detector.py")
-ml = _load("neuralforger_ml", "neuralforger-ml.py")
-confidence = _load("neuralforger_confidence", "neuralforger-confidence.py")
-cli = _load("neuralforger_cli", "neuralforger-cli.py")
-banner_nf = _load("neuralforger_banner", "neuralforger-banner.py")
-output = _load("neuralforger_output", "neuralforger-output.py")
+# ML-SSRFinder extension modules (hyphenated names)
+config = _load("mlssrfinder_config", "mlssrfinder-config.py")
+detector = _load("mlssrfinder_detector", "mlssrfinder-detector.py")
+ml = _load("mlssrfinder_ml", "mlssrfinder-ml.py")
+confidence = _load("mlssrfinder_confidence", "mlssrfinder-confidence.py")
+cli = _load("mlssrfinder_cli", "mlssrfinder-cli.py")
+banner_nf = _load("mlssrfinder_banner", "mlssrfinder-banner.py")
+output = _load("mlssrfinder_output", "mlssrfinder-output.py")
 
 # SSRFinder base modules (used directly)
 import request_parser
@@ -256,7 +256,7 @@ def test_nf_payload_integration():
     """Test NeuralForger's ML-enhanced payload generation."""
     print("\n[*] Testing NF Payload Integration...")
 
-    nf_main = _load("neuralforger_main", "neuralforger-main.py")
+    nf_main = _load("mlssrfinder_main", "mlssrfinder-main.py")
 
     ml_recs = [
         {"category": "localhost", "priority": "HIGH", "success_rate": 37,
@@ -352,7 +352,7 @@ def test_integration():
          ssrf_conf == "HIGH" and nf_level == "HIGH")
 
     # Verify auth detection works
-    nf_main = _load("neuralforger_main", "neuralforger-main.py")
+    nf_main = _load("mlssrfinder_main", "mlssrfinder-main.py")
     test("detect_auth_header: True with auth",
          nf_main.detect_auth_header({"Authorization": "Bearer x"}) is True)
     test("detect_auth_header: False without auth",
@@ -366,7 +366,7 @@ def test_integration():
 def main():
     print("=" * 72)
     print("NEURAL FORGER - INTEGRATION TEST SUITE")
-    print("Testing SSRFinder base + Neural Forger extension")
+    print("Testing SSRFinder base + ML-SSRFinder extension")
     print("=" * 72)
 
     test_detector()

@@ -4,7 +4,13 @@ Confidence level calculation for SSRF detection
 """
 
 from typing import Tuple, Optional
-from colorama import Fore
+try:
+    from colorama import Fore, Style
+except ImportError:
+    class Fore:
+        RED = GREEN = YELLOW = BLUE = MAGENTA = CYAN = WHITE = RESET = ""
+    class Style:
+        BRIGHT = DIM = NORMAL = RESET_ALL = ""
 
 
 def calculate_confidence(status_code: Optional[int], size_diff: float) -> Tuple[str, str]:
@@ -52,8 +58,6 @@ def get_confidence_color(confidence: str) -> str:
     Returns:
         Colorama color code
     """
-    from colorama import Style
-    
     colors = {
         "HIGH": Fore.RED,
         "MEDIUM-HIGH": Fore.YELLOW + Style.BRIGHT,

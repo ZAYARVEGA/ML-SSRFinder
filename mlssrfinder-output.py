@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Neural Forger - Professional Output Formatter
+ML-SSRFinder - Professional Output Formatter
 
 Handles all terminal output, file output, and structured format generation
 (text, JSON, XML). Follows professional pentesting tool conventions with
@@ -26,14 +26,14 @@ except ImportError:
     Fore = Style = _Stub()
 
 # Import config
-_cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "neuralforger-config.py")
-_spec = importlib.util.spec_from_file_location("neuralforger_config", _cfg_path)
+_cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mlssrfinder-config.py")
+_spec = importlib.util.spec_from_file_location("mlssrfinder_config", _cfg_path)
 _cfg_mod = importlib.util.module_from_spec(_spec)
-if "neuralforger_config" not in sys.modules:
-    sys.modules["neuralforger_config"] = _cfg_mod
+if "mlssrfinder_config" not in sys.modules:
+    sys.modules["mlssrfinder_config"] = _cfg_mod
     _spec.loader.exec_module(_cfg_mod)
 else:
-    _cfg_mod = sys.modules["neuralforger_config"]
+    _cfg_mod = sys.modules["mlssrfinder_config"]
 
 INDICATOR_INFO = _cfg_mod.INDICATOR_INFO
 INDICATOR_SUCCESS = _cfg_mod.INDICATOR_SUCCESS
@@ -43,7 +43,7 @@ INDICATOR_WARNING = _cfg_mod.INDICATOR_WARNING
 
 class OutputFormatter:
     """
-    Professional output formatter for Neural Forger.
+    Professional output formatter for ML-SSRFinder.
 
     Supports text, JSON, and XML output formats with optional file output
     and configurable verbosity levels.
@@ -619,7 +619,7 @@ class OutputFormatter:
         """
         self.blank()
         self.success("Proceed with detailed injection testing using:")
-        self.plain(f"    neuralforger -r {request_file} -p {best_param}")
+        self.plain(f"    ml-ssrfinder -r {request_file} -p {best_param}")
         self.blank()
 
     # ------------------------------------------------------------------
@@ -647,7 +647,7 @@ class OutputFormatter:
     def _generate_xml(self) -> str:
         """Generate XML output from collected results."""
         lines = ['<?xml version="1.0" encoding="UTF-8"?>']
-        lines.append("<neuralforger_results>")
+        lines.append("<mlssrfinder_results>")
         lines.append(f'  <timestamp>{datetime.now(timezone.utc).isoformat()}</timestamp>')
         lines.append(f"  <total_tests>{len(self._collected_results)}</total_tests>")
         for result in self._collected_results:
@@ -657,5 +657,5 @@ class OutputFormatter:
                     safe_val = str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                     lines.append(f"    <{key}>{safe_val}</{key}>")
             lines.append("  </result>")
-        lines.append("</neuralforger_results>")
+        lines.append("</mlssrfinder_results>")
         return "\n".join(lines)

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Neural Forger - ASCII Banner Display
+ML-SSRFinder - ASCII Banner Display
 
-Professional ASCII art banner for the Neural Forger framework.
+Professional ASCII art banner for the ML-SSRFinder framework.
 Designed for terminal display with optional colorama support.
 """
 
@@ -18,12 +18,11 @@ except ImportError:
 
 # Primary banner design
 BANNER = r"""
-    _   __                     __   ______                          
-   / | / /__  __  _________  / /  / ____/___  _________ ____  _____
-  /  |/ / _ \/ / / / ___/ _ \/ /  / /_  / __ \/ ___/ __ `/ _ \/ ___/
- / /|  /  __/ /_/ / /  / __ / /  / __/ / /_/ / /  / /_/ /  __/ /    
-/_/ |_/\___/\__,_/_/  /_/ /_/_/  /_/    \____/_/   \__, /\___/_/     
-                                                   /____/             
+  __  __ _       ____  ____  ____  _____ _           _
+ |  \/  | |     / ___||  _ \|  _ \|  ___(_)_ __   __| | ___ _ __
+ | |\/| | |     \___ \| |_) | |_) | |_  | | '_ \ / _` |/ _ \ '__|
+ | |  | | |___   ___) |  __/|  _ <|  _| | | | | | (_| |  __/ |
+ |_|  |_|_____| |____/|_|   |_| \_\_|   |_|_| |_|\__,_|\___|_|
 """
 
 TAGLINE = "ML-Powered SSRF Detection Framework"
@@ -32,7 +31,7 @@ SEPARATOR = "=" * 64
 
 def print_banner(version: str = "1.0.0", verbosity: int = 1) -> None:
     """
-    Display the Neural Forger banner.
+    Display the ML-SSRFinder banner.
 
     Args:
         version: Current tool version string.

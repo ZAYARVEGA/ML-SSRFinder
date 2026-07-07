@@ -5,7 +5,13 @@ Main SSRFinder class
 
 import sys
 from typing import Optional, List, Dict
-from colorama import Fore, Style
+try:
+    from colorama import Fore, Style
+except ImportError:
+    class Fore:
+        RED = GREEN = YELLOW = BLUE = MAGENTA = CYAN = WHITE = RESET = ""
+    class Style:
+        BRIGHT = DIM = NORMAL = RESET_ALL = ""
 from request_sender import create_session, send_request
 from request_parser import parse_raw_request
 from injection_handler import find_injection_point, replace_injection_point

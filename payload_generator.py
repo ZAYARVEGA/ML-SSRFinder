@@ -5,7 +5,13 @@ Payload generation functionality
 
 import sys
 from typing import List, Optional
-from colorama import Fore, Style
+try:
+    from colorama import Fore, Style
+except ImportError:
+    class Fore:
+        RED = GREEN = YELLOW = BLUE = MAGENTA = CYAN = WHITE = RESET = ""
+    class Style:
+        BRIGHT = DIM = NORMAL = RESET_ALL = ""
 from config import DEFAULT_PAYLOADS, DEFAULT_PORTS
 from network_parser import parse_ip_range, parse_ports
 from url_encoding import add_path_to_payload, url_encode_payload

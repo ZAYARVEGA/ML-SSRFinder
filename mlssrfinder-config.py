@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Neural Forger - Configuration and Constants (Extension)
+ML-SSRFinder - Configuration and Constants (Extension)
 
 Extends SSRFinder's base configuration with ML-specific parameters
-and Neural Forger tool metadata. Imports all base constants from
+and ML-SSRFinder tool metadata. Imports all base constants from
 SSRFinder's config module.
 """
 
@@ -18,7 +18,7 @@ from config import (
 
 # Tool metadata
 VERSION = "1.0.0"
-TOOL_NAME = "Neural Forger"
+TOOL_NAME = "ML-SSRFinder"
 TOOL_DESCRIPTION = "ML-Powered SSRF Detection Framework"
 AUTHOR = "Security Research Team"
 
@@ -31,7 +31,7 @@ INJECTION_MARKERS = ["SSRF", "***", "INJECT", "FUZZ"]
 # HTTP configuration
 DEFAULT_TIMEOUT = 5
 DEFAULT_THREADS = 1
-DEFAULT_USER_AGENT = f"NeuralForger/{VERSION}"
+DEFAULT_USER_AGENT = f"ML-SSRFinder/{VERSION}"
 
 # ML configuration
 ML_CONFIDENCE_THRESHOLD = 70

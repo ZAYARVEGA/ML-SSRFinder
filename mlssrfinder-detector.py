@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Neural Forger - SSRF Vulnerability Detector
+ML-SSRFinder - SSRF Vulnerability Detector
 
 Zero-dependency machine learning detector for Server-Side Request Forgery
 vulnerabilities. Analyzes HTTP request structure without performing injection

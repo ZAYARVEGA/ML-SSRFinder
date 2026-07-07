@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Neural Forger - HTTP Response ML Analysis Layer
+ML-SSRFinder - HTTP Response ML Analysis Layer
 
 Loads 3 trained ML models (SVM-RBF, XGBoost, Random Forest) that analyze
 HTTP responses after payload injection to confirm SSRF vulnerabilities.
 
 This is the ACTIVE scan layer — it requires actual server interaction
 (payloads must be injected first via -p). It complements the passive
-request-based ML in neuralforger-ml.py.
+request-based ML in mlssrfinder-ml.py.
 
 Public API:
     ResponseMLAnalyzer.analyze(response_data) -> Optional[ResponseMLResult]
@@ -385,76 +385,79 @@ def extract_response_features(response_dict: dict) -> dict:
     """
     Extract the 33 ML features from an HTTP response dict.
 
-    This function replicates the exact logic from train_response_models.py's
-    extract_features() so that runtime feature vectors match what the models
-    were trained on.
+    Feature names match train_response_models.py exactly so that the runtime
+    feature vector aligns with what the trained pkl models expect.
 
     Args:
         response_dict: Dict produced by _response_data_to_dict().
 
     Returns:
-        Dict mapping feature names to numeric values.
+        Dict mapping feature names to numeric values (33 features).
     """
     features = {}
 
     # --- Status code features ---
-    status = response_dict.get('status_code')
+    status = response_dict.get('status_code') or 0
     features['status_is_200'] = 1 if status == 200 else 0
-    features['status_is_redirect'] = 1 if status and 300 <= status < 400 else 0
-    features['status_is_error'] = 1 if status and status >= 400 else 0
-    features['status_is_server_error'] = 1 if status and 500 <= status < 600 else 0
+    features['status_is_400'] = 1 if status == 400 else 0
+    features['status_is_403'] = 1 if status == 403 else 0
+    features['status_is_404'] = 1 if status == 404 else 0
+    features['status_is_502'] = 1 if status == 502 else 0
+    features['status_4xx'] = 1 if 400 <= status < 500 else 0
+    features['status_5xx'] = 1 if 500 <= status < 600 else 0
 
     # --- Response size features ---
     size = response_dict.get('response_size_bytes') or 0
-    features['response_size_bytes'] = size
-    features['size_is_zero'] = 1 if size == 0 else 0
-    features['size_is_small'] = 1 if 0 < size <= 500 else 0
-    features['size_is_medium'] = 1 if 500 < size <= 5000 else 0
-    features['size_is_large'] = 1 if size > 5000 else 0
+    features['size_small'] = 1 if 0 < size < 500 else 0
+    features['size_medium'] = 1 if 500 <= size < 5000 else 0
+    features['size_large'] = 1 if size >= 5000 else 0
 
     # --- Timing features ---
-    timing = response_dict.get('response_time_ms') or 0
-    features['response_time_ms'] = timing
-    features['timing_is_fast'] = 1 if timing < 500 else 0
-    features['timing_is_slow'] = 1 if timing > 3000 else 0
+    rt = response_dict.get('response_time_ms') or 0
+    features['time_slow'] = 1 if rt >= 1000 else 0
+    # timing_ratio requires baseline data; supplied by caller or defaults to 0
+    features['timing_ratio'] = float(response_dict.get('timing_ratio', 0))
 
-    # --- Content-Type features ---
+    # --- Server header features ---
+    server = (response_dict.get('server_header') or '').lower()
+    features['server_ec2ws'] = 1 if 'ec2ws' in server else 0
+    features['server_istio'] = 1 if 'istio' in server else 0
+    features['server_cloud'] = 1 if any(
+        x in server for x in ['cloudflare', 'github', 'amazons3']
+    ) else 0
+
+    # --- Content-type features ---
     ct = (response_dict.get('content_type') or '').lower()
-    features['ct_is_json'] = 1 if 'json' in ct else 0
-    features['ct_is_html'] = 1 if 'html' in ct else 0
-    features['ct_is_xml'] = 1 if 'xml' in ct else 0
-    features['ct_is_text'] = 1 if ct.startswith('text/plain') else 0
-    features['ct_is_image'] = 1 if 'image' in ct else 0
+    features['ct_json'] = 1 if 'json' in ct else 0
+    features['ct_text_plain'] = 1 if ct.strip().startswith('text/plain') else 0
+    features['ct_xml'] = 1 if 'xml' in ct else 0
+    # text/plain without being an error JSON = content-type mismatch (suspicious)
+    features['ct_mismatch'] = 1 if features['ct_text_plain'] and not response_dict.get('body_has_error_json') else 0
 
-    # --- Server header feature ---
-    features['has_server_header'] = 1 if response_dict.get('server_header') else 0
+    # --- Body content indicator features (names match training schema) ---
+    features['body_aws_meta'] = 1 if response_dict.get('body_has_aws_metadata') else 0
+    features['body_creds'] = 1 if response_dict.get('body_has_credentials') else 0
+    features['body_oob_echo'] = 1 if response_dict.get('body_has_oob_echo') else 0
+    features['body_error_json'] = 1 if response_dict.get('body_has_error_json') else 0
+    features['body_bearer'] = 1 if response_dict.get('body_has_bearer_token') else 0
+    features['body_internal_info'] = 1 if response_dict.get('body_has_internal_service_info') else 0
 
-    # --- Body content indicator features ---
-    features['body_has_aws_metadata'] = 1 if response_dict.get('body_has_aws_metadata') else 0
-    features['body_has_credentials'] = 1 if response_dict.get('body_has_credentials') else 0
-    features['body_has_oob_echo'] = 1 if response_dict.get('body_has_oob_echo') else 0
-    features['body_has_error_json'] = 1 if response_dict.get('body_has_error_json') else 0
-    features['body_has_bearer_token'] = 1 if response_dict.get('body_has_bearer_token') else 0
-    features['body_has_internal_service_info'] = 1 if response_dict.get('body_has_internal_service_info') else 0
-
-    # --- NEW: Extended body content features ---
-    features['body_has_system_file'] = 1 if response_dict.get('body_has_system_file') else 0
-    features['body_has_db_config'] = 1 if response_dict.get('body_has_db_config') else 0
-    features['body_has_private_key'] = 1 if response_dict.get('body_has_private_key') else 0
-    features['body_has_waf_block'] = 1 if response_dict.get('body_has_waf_block') else 0
-    features['body_has_env_config'] = 1 if response_dict.get('body_has_env_config') else 0
-    features['body_has_gcp_metadata'] = 1 if response_dict.get('body_has_gcp_metadata') else 0
-
-    # --- Unusual headers feature ---
-    unusual = response_dict.get('unusual_headers') or []
-    features['unusual_header_count'] = len(unusual)
-    features['has_unusual_headers'] = 1 if len(unusual) > 0 else 0
-
-    # --- Body structure one-hot features ---
+    # --- Body structure features (names match training schema) ---
     structure = response_dict.get('body_structure', 'empty')
-    for cat in ['metadata_listing', 'credentials_json', 'error_json',
-                'html_public_page', 'success_json', 'empty']:
-        features[f'structure_{cat}'] = 1 if structure == cat else 0
+    features['struct_metadata'] = 1 if 'metadata_listing' in structure else 0
+    features['struct_creds_json'] = 1 if 'credentials_json' in structure else 0
+    features['struct_error'] = 1 if 'error' in structure else 0
+
+    # --- Differential features (require baseline comparison; default 0 at runtime) ---
+    features['is_timing_diff'] = int(response_dict.get('is_timing_differential', False))
+    features['is_status_diff'] = int(response_dict.get('is_status_differential', False))
+    features['is_content_diff'] = int(response_dict.get('is_content_differential', False))
+
+    # --- Unusual header features ---
+    unusual = response_dict.get('unusual_headers') or []
+    unusual_lower = [str(h).lower() for h in unusual]
+    features['has_auth_header'] = 1 if any('auth' in h for h in unusual_lower) else 0
+    features['has_forwarded'] = 1 if any('forward' in h for h in unusual_lower) else 0
 
     return features
 
@@ -887,7 +890,7 @@ class ResponseMLAnalyzer:
 
         Searches for .pkl files in multiple candidate directories:
         1. The explicitly provided models_dir
-        2. The directory containing this module (neuralforger-response-ml.py)
+        2. The directory containing this module (mlssrfinder-response-ml.py)
         3. The current working directory
         4. A 'models/' subdirectory under each of the above
 

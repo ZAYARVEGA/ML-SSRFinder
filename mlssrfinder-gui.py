@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Neural Forger - GUI Interface
+ML-SSRFinder - GUI Interface
 ML-Powered SSRF Detection Framework
 
-Graphical interface for Neural Forger + SSRFfinder.
+Graphical interface for ML-SSRFinder + SSRFfinder.
 Requires: Python 3, tkinter (pre-installed on most Linux distros).
-Run: python3 neuralforger-gui.py
+Run: python3 mlssrfinder-gui.py
 """
 
 import tkinter as tk
@@ -22,7 +22,7 @@ import sys
 # ============================================================================
 
 VERSION = "1.0.0"
-TOOL_NAME = "Neural Forger"
+TOOL_NAME = "ML-SSRFinder"
 MARKERS = ["SSRF", "***", "INJECT", "FUZZ"]
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -288,7 +288,7 @@ class NeuralForgerGUI:
         self.combo_mode.bind("<<ComboboxSelected>>", lambda e: self._on_change())
 
         f, self.combo_ml = make_row(grid, "Use ML Analysis:", lambda p: make_combo(
-            p, ["Yes (Neural Forger)", "No (SSRFfinder only)"], 0))
+            p, ["Yes (ML-SSRFinder)", "No (SSRFfinder only)"], 0))
         grid.add_field(f)
         self.combo_ml.bind("<<ComboboxSelected>>", lambda e: self._on_change())
 
@@ -660,7 +660,7 @@ class NeuralForgerGUI:
         source = self._get_source()
         strategy = self._get_strategy()
 
-        script = "python3 neuralforger-main.py" if ml else "python3 main.py"
+        script = "python3 mlssrfinder-main.py" if ml else "python3 main.py"
         parts = [script]
 
         # Source
@@ -837,7 +837,7 @@ class NeuralForgerGUI:
             return
 
         # Build the actual command
-        script = "neuralforger-main.py" if ml else "main.py"
+        script = "mlssrfinder-main.py" if ml else "main.py"
         script_path = os.path.join(BASE_DIR, script)
 
         cmd_parts = [sys.executable, script_path]

@@ -83,9 +83,9 @@ for name in expected:
     except Exception as e:
         print(f"    {name}: LOAD FAILED -> {type(e).__name__}: {e}")
 
-# 6. Check neuralforger-response-ml.py exists
-print(f"\n[6] Checking neuralforger-response-ml.py...")
-rml_path = os.path.join(script_dir, 'neuralforger-response-ml.py')
+# 6. Check mlssrfinder-response-ml.py exists
+print(f"\n[6] Checking mlssrfinder-response-ml.py...")
+rml_path = os.path.join(script_dir, 'mlssrfinder-response-ml.py')
 if os.path.isfile(rml_path):
     size = os.path.getsize(rml_path)
     # Check if it's the updated version (has 'search_dirs')

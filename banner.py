@@ -3,7 +3,13 @@
 Banner display functionality
 """
 
-from colorama import Fore, Style
+try:
+    from colorama import Fore, Style
+except ImportError:
+    class Fore:
+        RED = GREEN = YELLOW = BLUE = MAGENTA = CYAN = WHITE = RESET = ""
+    class Style:
+        BRIGHT = DIM = NORMAL = RESET_ALL = ""
 
 
 def print_banner():

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Neural Forger - Confidence Scoring Engine (Extension)
+ML-SSRFinder - Confidence Scoring Engine (Extension)
 
 Extends SSRFinder's confidence_calculator with combined ML+injection
 scoring. Uses SSRFinder's base confidence logic and adds weighted
@@ -54,7 +54,7 @@ class ConfidenceResult:
         score = self.combined_confidence if self.combined_confidence is not None else self.injection_confidence
         if score >= 90.0:
             return "CRITICAL"
-        if score >= 75.0:
+        if score >= 70.0:
             return "HIGH"
         if score >= 50.0:
             return "MEDIUM"

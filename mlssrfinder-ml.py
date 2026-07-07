@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Neural Forger - Machine Learning Integration Layer (Extension)
+ML-SSRFinder - Machine Learning Integration Layer (Extension)
 
 Wraps the detector module to provide a clean interface for ML-powered
-analysis within the Neural Forger workflow. Handles caching, parameter
+analysis within the ML-SSRFinder workflow. Handles caching, parameter
 discovery, and result formatting for the inspection mode.
 
 Public API:
@@ -12,6 +12,8 @@ Public API:
     MLAnalyzer.discover_parameters(url, headers, body) -> list[ParameterInfo]
 """
 
+import os
+import pickle
 import re
 import time
 from typing import Dict, List, Any, Optional, Tuple
@@ -27,15 +29,26 @@ except ImportError:
             return ""
     Fore = Style = _Stub()
 
+# Optional dependency for the passive XGBoost triage classifier.
+# Framework degrades to the rule-based scorer when unavailable.
+try:
+    import pandas as _pd
+    import numpy as _np
+    _HAS_ML_LIBS = True
+except ImportError:
+    _HAS_ML_LIBS = False
+
+_PASSIVE_MODEL_FILE = "xgboost_request.pkl"
+
 # Import the detector (hyphenated module name)
 import importlib
 import sys
 import os
 
-_detector_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "neuralforger-detector.py")
-_spec = importlib.util.spec_from_file_location("neuralforger_detector", _detector_path)
+_detector_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mlssrfinder-detector.py")
+_spec = importlib.util.spec_from_file_location("mlssrfinder_detector", _detector_path)
 _detector_mod = importlib.util.module_from_spec(_spec)
-sys.modules["neuralforger_detector"] = _detector_mod
+sys.modules["mlssrfinder_detector"] = _detector_mod
 _spec.loader.exec_module(_detector_mod)
 
 analyze_request = _detector_mod.analyze_request
@@ -137,16 +150,110 @@ _PARAM_INDICATORS: Dict[str, Tuple[float, str]] = {
 }
 
 
+def _load_passive_xgboost() -> Optional[dict]:
+    """
+    Load the passive request-level XGBoost triage classifier from disk.
+
+    Returns the pickle payload (model + feature_names + metrics) or None
+    when the file is missing or the ML dependencies are not installed.
+    Silent by design: graceful degradation to the rule-based scorer.
+    """
+    if not _HAS_ML_LIBS:
+        return None
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        _PASSIVE_MODEL_FILE)
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, "rb") as f:
+            return pickle.load(f)
+    except Exception:
+        return None
+
+
+def _xgboost_confidence(
+    pkl_data: dict,
+    url: str,
+    param_name: str,
+    method: str,
+    requires_auth: bool,
+) -> Optional[int]:
+    """
+    Run the passive XGBoost model on a single request and return
+    the positive-class probability mapped to 0-100. Returns None on
+    prediction failure so the caller can fall back to the rule-based
+    score.
+    """
+    try:
+        features = extract_features(url, param_name, method, requires_auth)
+        feature_names = pkl_data["feature_names"]
+        row = [int(features.get(fn, False)) for fn in feature_names]
+        df = _pd.DataFrame([row], columns=feature_names)
+        proba = pkl_data["model"].predict_proba(df.values)[0][1]
+        return int(round(proba * 100))
+    except Exception:
+        return None
+
+
 class MLAnalyzer:
     """
     Machine learning analysis engine for SSRF detection.
 
     Provides parameter discovery, vulnerability scoring, and payload
     recommendations. Results are cached to avoid redundant computation.
+
+    When the passive XGBoost triage classifier is available on disk it
+    overrides the rule-based confidence value; the rule-based scorer is
+    always retained as the source of payload recommendations, feature
+    details, and as the fallback when the learned model is unavailable.
     """
 
     def __init__(self) -> None:
         self._cache: Optional[MLResult] = None
+        self._passive_model = _load_passive_xgboost()
+
+    def _score_request(
+        self,
+        url: str,
+        method: str,
+        param_name: str,
+        requires_auth: bool,
+    ) -> Dict[str, Any]:
+        """
+        Run the rule-based analyser and, when the passive XGBoost model
+        is loaded, override the confidence with the learned probability.
+        The rule-based payload recommendations and feature details are
+        always preserved.
+        """
+        analysis = analyze_request({
+            "url": url,
+            "method": method,
+            "parameter_name": param_name,
+            "requires_auth": requires_auth,
+        })
+
+        if self._passive_model is None:
+            return analysis
+
+        xgb_conf = _xgboost_confidence(
+            self._passive_model, url, param_name, method, requires_auth,
+        )
+        if xgb_conf is None:
+            return analysis
+
+        analysis["confidence"] = xgb_conf
+        analysis["vulnerable"] = xgb_conf >= 50
+        if not analysis["vulnerable"]:
+            analysis["risk_level"] = "SAFE"
+        elif xgb_conf >= 90:
+            analysis["risk_level"] = "CRITICAL"
+        elif xgb_conf >= 70:
+            analysis["risk_level"] = "HIGH"
+        elif xgb_conf >= 50:
+            analysis["risk_level"] = "MEDIUM"
+        else:
+            analysis["risk_level"] = "LOW"
+        return analysis
 
     def analyze(
         self,
@@ -179,35 +286,20 @@ class MLAnalyzer:
 
         # If a target parameter is specified, focus analysis on it
         if target_parameter:
-            analysis = analyze_request({
-                "url": url,
-                "method": method,
-                "parameter_name": target_parameter,
-                "requires_auth": requires_auth,
-            })
+            analysis = self._score_request(url, method, target_parameter, requires_auth)
         else:
             # Find the highest-risk parameter
             best_analysis = None
             best_confidence = -1
 
             for param_info in discovered_params:
-                analysis = analyze_request({
-                    "url": url,
-                    "method": method,
-                    "parameter_name": param_info.name,
-                    "requires_auth": requires_auth,
-                })
+                analysis = self._score_request(url, method, param_info.name, requires_auth)
                 if analysis["confidence"] > best_confidence:
                     best_confidence = analysis["confidence"]
                     best_analysis = analysis
 
             if best_analysis is None:
-                analysis = analyze_request({
-                    "url": url,
-                    "method": method,
-                    "parameter_name": "",
-                    "requires_auth": requires_auth,
-                })
+                analysis = self._score_request(url, method, "", requires_auth)
             else:
                 analysis = best_analysis
 
@@ -216,12 +308,7 @@ class MLAnalyzer:
         # Score each discovered parameter individually
         scored_params: List[ParameterInfo] = []
         for param_info in discovered_params:
-            param_analysis = analyze_request({
-                "url": url,
-                "method": method,
-                "parameter_name": param_info.name,
-                "requires_auth": requires_auth,
-            })
+            param_analysis = self._score_request(url, method, param_info.name, requires_auth)
             param_info.confidence = float(param_analysis["confidence"])
             if not param_info.reason:
                 param_lower = param_info.name.lower()

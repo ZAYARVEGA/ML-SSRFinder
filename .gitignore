@@ -3,3 +3,12 @@ __pycache__/
 *.pyo
 .env
 *.log
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+.idea/
+.vscode/
+*.swp
+_test_request.txt

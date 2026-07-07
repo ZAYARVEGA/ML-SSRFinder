@@ -6,10 +6,14 @@ Author: Security Research Team
 """
 
 import sys
-from colorama import init, Fore, Style
-
-# Initialize colorama
-init(autoreset=True)
+try:
+    from colorama import init, Fore, Style
+    init(autoreset=True)
+except ImportError:
+    class Fore:
+        RED = GREEN = YELLOW = BLUE = MAGENTA = CYAN = WHITE = RESET = ""
+    class Style:
+        BRIGHT = DIM = NORMAL = RESET_ALL = ""
 
 # Import modules
 from banner import print_banner

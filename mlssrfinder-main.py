@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Neural Forger v1.0.0 - ML-Powered SSRF Detection Framework
+ML-SSRFinder v1.0.0 - ML-Powered SSRF Detection Framework
 
 Extension for SSRFinder. Adds ML pre-analysis, combined confidence
 scoring, and professional output formatting on top of SSRFinder's
 core injection engine.
 
 Usage:
-    python3 neuralforger-main.py -r request.txt -i
-    python3 neuralforger-main.py -r request.txt -p url
-    python3 neuralforger-main.py -u "http://target/api?url=SSRF" -p url
+    python3 mlssrfinder-main.py -r request.txt -i
+    python3 mlssrfinder-main.py -r request.txt -p url
+    python3 mlssrfinder-main.py -u "http://target/api?url=SSRF" -p url
 """
 
 import signal
@@ -55,16 +55,16 @@ from network_parser import parse_ip_range, parse_ports
 from url_encoding import url_encode_payload, add_path_to_payload
 
 # ============================================================================
-# Load Neural Forger extension modules (hyphenated names)
+# Load ML-SSRFinder extension modules (hyphenated names)
 # ============================================================================
 
-config = _load_module("neuralforger_config", "neuralforger-config.py")
-banner_mod = _load_module("neuralforger_banner", "neuralforger-banner.py")
-cli_mod = _load_module("neuralforger_cli", "neuralforger-cli.py")
-ml_mod = _load_module("neuralforger_ml", "neuralforger-ml.py")
-confidence_mod = _load_module("neuralforger_confidence", "neuralforger-confidence.py")
-output_mod = _load_module("neuralforger_output", "neuralforger-output.py")
-response_ml_mod = _load_module("neuralforger_response_ml", "neuralforger-response-ml.py")
+config = _load_module("mlssrfinder_config", "mlssrfinder-config.py")
+banner_mod = _load_module("mlssrfinder_banner", "mlssrfinder-banner.py")
+cli_mod = _load_module("mlssrfinder_cli", "mlssrfinder-cli.py")
+ml_mod = _load_module("mlssrfinder_ml", "mlssrfinder-ml.py")
+confidence_mod = _load_module("mlssrfinder_confidence", "mlssrfinder-confidence.py")
+output_mod = _load_module("mlssrfinder_output", "mlssrfinder-output.py")
+response_ml_mod = _load_module("mlssrfinder_response_ml", "mlssrfinder-response-ml.py")
 
 try:
     from colorama import Fore, Style
@@ -377,7 +377,7 @@ def run_injection_mode(
     Execute injection testing mode with ML pre-analysis.
 
     Uses SSRFinder's core injection engine (find_injection_point,
-    replace_injection_point, send_request) combined with Neural Forger's
+    replace_injection_point, send_request) combined with ML-SSRFinder's
     ML analysis and combined confidence scoring.
     """
     out.info(f"{config.TOOL_NAME} v{config.VERSION} - {config.TOOL_DESCRIPTION}")
@@ -503,7 +503,7 @@ def run_injection_mode(
             session, method, test_url, test_headers, test_body, args.timeout,
         )
 
-        # Calculate confidence using Neural Forger's enhanced scoring
+        # Calculate confidence using ML-SSRFinder's enhanced scoring
         if resp["success"]:
             if baseline_size > 0:
                 size_diff = abs((resp["response_size"] - baseline_size) / baseline_size * 100)
@@ -697,7 +697,7 @@ def run_injection_mode(
 
 def main() -> int:
     """
-    Main entry point for Neural Forger.
+    Main entry point for ML-SSRFinder.
 
     Returns:
         Exit code.
@@ -721,7 +721,7 @@ def main() -> int:
     else:
         verbosity = 1
 
-    # Print Neural Forger banner
+    # Print ML-SSRFinder banner
     banner_mod.print_banner(version=config.VERSION, verbosity=verbosity)
 
     # Create output formatter

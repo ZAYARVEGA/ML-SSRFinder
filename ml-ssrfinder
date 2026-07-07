@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+
+# Use the virtual environment from the project root if present,
+# otherwise fall back to whatever python3 is on PATH.
+VENV="$SCRIPT_DIR/../venv/bin/python3"
+
+if [ -x "$VENV" ]; then
+    exec "$VENV" "$SCRIPT_DIR/mlssrfinder-main.py" "$@"
+else
+    exec python3 "$SCRIPT_DIR/mlssrfinder-main.py" "$@"
+fi

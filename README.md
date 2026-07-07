@@ -1,18 +1,18 @@
-# Neural Forger
+# ML-SSRFinder
 
-**ML-Powered SSRF Detection Framework** — extends SSRFinder with machine learning analysis for high-confidence Server-Side Request Forgery detection.
+**ML-Powered SSRF Detection Framework**
 
-Neural Forger works in two complementary stages:
+ML-SSRFinder is a command-line tool for detecting Server-Side Request Forgery (SSRF) vulnerabilities. It extends a core HTTP injection engine with two machine learning layers:
 
-- **Passive mode** (`-i`): analyses HTTP request structure with a rule-based scorer and a trained XGBoost classifier to rank injection candidates — no traffic sent.
-- **Active mode** (`-p`): injects payloads via SSRFinder's engine, then runs an ensemble of three ML models (SVM, XGBoost, Random Forest) on every HTTP response to confirm exploitation.
+- **Passive mode** (`-i`): analyses the HTTP request structure with a rule-based scorer and a trained XGBoost classifier to rank injection candidates — no traffic is sent to the target.
+- **Active mode** (`-p`): injects payloads via the built-in injection engine, then runs an ensemble of three ML models (SVM, XGBoost, Random Forest) on every HTTP response to confirm exploitation.
 
 ---
 
 ## Requirements
 
 - Python 3.8+
-- Dependencies (install via pip):
+- pip dependencies:
 
 ```
 colorama>=0.4.6
@@ -28,20 +28,20 @@ xgboost>=3.2.0
 ## Installation
 
 ```bash
-git clone https://github.com/your-username/NeuralForger.git
-cd NeuralForger
+git clone https://github.com/ZAYARVEGA/ML-SSRFinder.git
+cd ML-SSRFinder
 pip install -r requirements.txt
 ```
 
-> The trained model files (`svm_rbf_response.pkl`, `xgboost_response.pkl`, `random_forest_response.pkl`) must be in the **same directory** as `neuralforger-main.py`. They are included in the repository.
+The trained model files (`svm_rbf_response.pkl`, `xgboost_response.pkl`, `random_forest_response.pkl`, `xgboost_request.pkl`) are included in the repository and must stay in the same directory as `mlssrfinder-main.py`.
 
 ---
 
 ## Quick Start
 
-### 1. Capture a raw HTTP request
+### Step 1 — Capture a raw HTTP request
 
-Save the request from Burp Suite, your browser proxy, or write it manually. Place the injection marker `SSRF` (or `***`, `INJECT`, `FUZZ`) where you want payloads to be inserted:
+Save a request from Burp Suite, your browser proxy, or write it manually. Place one of the injection markers (`SSRF`, `***`, `INJECT`, `FUZZ`) where you want payloads inserted:
 
 ```
 GET /api/fetch?url=SSRF&format=json HTTP/1.1
@@ -53,15 +53,16 @@ Accept: application/json
 
 Save it as `request.txt`.
 
-### 2. Passive analysis (no traffic sent)
+### Step 2 — Passive analysis (no traffic sent)
 
-Identify which parameters are most likely vulnerable before touching the target:
+Identify the most likely vulnerable parameters before touching the target:
 
 ```bash
-python neuralforger-main.py -r request.txt -i
+python3 mlssrfinder-main.py -r request.txt -i
 ```
 
-Output example:
+Example output:
+
 ```
 Vulnerability Probability: 95%
 Risk Level: CRITICAL
@@ -73,23 +74,22 @@ SUSPICIOUS PARAMETERS IDENTIFIED:
 RECOMMENDED PAYLOADS (by dataset success rate):
   1. http://169.254.169.254/latest/meta-data/   Priority: CRITICAL | Success Rate: 27%
   2. http://localhost/admin                      Priority: HIGH     | Success Rate: 37%
-  ...
 ```
 
-### 3. Active injection testing
+### Step 3 — Active injection
 
-Test the `url` parameter with ML-recommended payloads:
+Inject payloads into the `url` parameter using ML-ranked payloads:
 
 ```bash
-python neuralforger-main.py -r request.txt -p url
+python3 mlssrfinder-main.py -r request.txt -p url
 ```
 
-### 4. Full active scan with response ML
+### Step 4 — Active injection with response ML
 
-Run all three response-analysis models on every injected payload to confirm exploitation:
+Run the full pipeline: injection + 3-model ensemble analysis on every response:
 
 ```bash
-python neuralforger-main.py -r request.txt -p url --response-ml
+python3 mlssrfinder-main.py -r request.txt -p url --response-ml
 ```
 
 ---
@@ -97,14 +97,14 @@ python neuralforger-main.py -r request.txt -p url --response-ml
 ## Usage Reference
 
 ```
-python neuralforger-main.py [options]
+python3 mlssrfinder-main.py [options]
 ```
 
 ### Input
 
 | Flag | Description |
 |------|-------------|
-| `-r FILE` / `--request FILE` | Raw HTTP request file (required unless using `-u`) |
+| `-r FILE` / `--request FILE` | Raw HTTP request file |
 | `-u URL` / `--url URL` | Direct URL with injection marker (e.g. `http://target.com/api?url=SSRF`) |
 
 ### Operation Modes
@@ -131,7 +131,7 @@ python neuralforger-main.py [options]
 
 | Flag | Description |
 |------|-------------|
-| `--response-ml` | Enable 3-model response ensemble after injection (active scan) |
+| `--response-ml` | Enable 3-model response ensemble after injection |
 | `--confidence-threshold N` | Minimum ML confidence % to proceed with injection (default: `70`) |
 
 ### Network Options
@@ -157,7 +157,7 @@ python neuralforger-main.py [options]
 
 ## Injection Markers
 
-Place one of these markers in the request file wherever you want payloads injected:
+Place one of these markers in the request file where payloads should be injected:
 
 | Marker | Example |
 |--------|---------|
@@ -171,35 +171,47 @@ Place one of these markers in the request file wherever you want payloads inject
 ## Examples
 
 ```bash
-# Passive recon — no traffic
-python neuralforger-main.py -r request.txt -i
+# Passive recon — inspect only, no traffic
+python3 mlssrfinder-main.py -r request.txt -i
 
-# Inject into 'url' param with default ML-recommended payloads
-python neuralforger-main.py -r request.txt -p url
+# Verbose passive analysis with ML reasoning
+python3 mlssrfinder-main.py -r request.txt -i -v
+
+# Inject into 'url' with default ML-recommended payloads
+python3 mlssrfinder-main.py -r request.txt -p url
 
 # Full active scan: injection + response ML confirmation
-python neuralforger-main.py -r request.txt -p url --response-ml
+python3 mlssrfinder-main.py -r request.txt -p url --response-ml
 
-# Test all payloads (not just ML-ranked), save JSON report
-python neuralforger-main.py -r request.txt -p url --payload-strategy all --format json -o results.json
+# Save results as JSON
+python3 mlssrfinder-main.py -r request.txt -p url --format json -o results.json
+
+# Use all payloads in the database (no ML filtering)
+python3 mlssrfinder-main.py -r request.txt -p url --payload-strategy all
+
+# Use only ML-recommended payloads
+python3 mlssrfinder-main.py -r request.txt -p url --payload-strategy ml-only
 
 # Test with a custom wordlist
-python neuralforger-main.py -r request.txt -p url --payload-strategy custom -w my_payloads.txt
+python3 mlssrfinder-main.py -r request.txt -p url --payload-strategy custom -w my_payloads.txt
 
-# Scan internal IP range
-python neuralforger-main.py -r request.txt -p url --ip-range 10.0.0.1-254 --path /admin
+# Test a single specific payload
+python3 mlssrfinder-main.py -r request.txt -p url --single-url "http://169.254.169.254/latest/meta-data/"
 
-# Route through Burp Suite proxy (for manual review)
-python neuralforger-main.py -r request.txt -p url --proxy http://127.0.0.1:8080 -v
+# Scan an internal IP range with a path
+python3 mlssrfinder-main.py -r request.txt -p url --ip-range 192.168.1.1-254 --path /admin
+
+# Lower the confidence threshold and use double URL encoding
+python3 mlssrfinder-main.py -r request.txt -p url --confidence-threshold 50 --encode double
+
+# Route through Burp Suite for manual review
+python3 mlssrfinder-main.py -r request.txt -p url --proxy http://127.0.0.1:8080 -v
 
 # Direct URL test (no request file needed)
-python neuralforger-main.py -u "http://target.com/fetch?src=SSRF" -p src
+python3 mlssrfinder-main.py -u "http://target.com/fetch?src=SSRF" -p src
 
-# Lower the confidence threshold and test with double URL encoding
-python neuralforger-main.py -r request.txt -p url --confidence-threshold 50 --encode double
-
-# Quiet output, pipe results elsewhere
-python neuralforger-main.py -r request.txt -p url -q --format json | jq .
+# Quiet output, pipe to jq
+python3 mlssrfinder-main.py -r request.txt -p url -q --format json | jq .
 ```
 
 ---
@@ -214,8 +226,9 @@ python neuralforger-main.py -r request.txt -p url -q --format json | jq .
 | `LOW` | 25–49% | Weak indicators, likely false positive |
 | `INFO` | 0–24% | No significant indicators |
 
-In **passive mode** the confidence is fused as: `0.70 × injection score + 0.30 × ML score`.  
-In **active mode** (`--response-ml`) the weights shift to favour direct response evidence: `0.60 × response ensemble + 0.30 × injection + 0.10 × ML`.
+**Passive mode** fuses scores as: `0.70 × injection score + 0.30 × ML score`
+
+**Active mode** (`--response-ml`) shifts weight to favour direct response evidence: `0.60 × response ensemble + 0.30 × injection + 0.10 × ML`
 
 ---
 
@@ -229,11 +242,13 @@ When `--response-ml` is active, three models analyse each HTTP response:
 | Random Forest | 67.9% |
 | XGBoost | 64.3% |
 
-The ensemble decides by **majority vote** (binary verdict) and **accuracy-weighted average** of calibrated probabilities (confidence value). A deterministic content-analysis module runs in parallel and can override the ensemble when it detects unambiguous indicators such as:
+The ensemble decides by **majority vote** (binary verdict) and **accuracy-weighted average** of calibrated probabilities (confidence value).
+
+A deterministic content-analysis module runs in parallel and can override the ensemble when it detects unambiguous indicators:
 
 - Cloud provider metadata (AWS IMDSv1/v2, GCP, Azure)
 - Leaked credentials or IAM tokens
-- System files (`/etc/passwd`, `/proc/self/`)
+- System file content (`/etc/passwd`, `/etc/shadow`)
 - Private keys or database connection strings
 - WAF block pages (suppresses false positives)
 
@@ -249,77 +264,74 @@ The ensemble decides by **majority vote** (binary verdict) and **accuracy-weight
 
 ---
 
-## Payload Strategies
-
-| Strategy | Description |
-|----------|-------------|
-| `ml-recommended` | ML-ranked payloads first, then standard payloads (default) |
-| `ml-only` | Only the payloads the ML model recommends |
-| `all` | All payloads in the database, no filtering |
-| `custom` | Only payloads from your `--wordlist` file |
-
----
-
-## GUI
-
-A graphical interface is also available:
-
-```bash
-python neuralforger-gui.py
-```
-
-Requires `tkinter` (included in standard Python on most systems).
-
----
-
 ## Running the Tests
 
 ```bash
-python neuralforger-test.py
+python3 mlssrfinder-test.py
 ```
 
 Expected output: `65/65 passed`.
 
 ---
 
+## GUI
+
+A graphical interface is available:
+
+```bash
+python3 mlssrfinder-gui.py
+```
+
+Requires `tkinter` (included in standard Python on most systems).
+
+---
+
 ## Project Structure
 
 ```
-neuralforger-main.py          # Main entry point
-neuralforger-cli.py           # Argument parser
-neuralforger-ml.py            # Passive request-level ML analyzer
-neuralforger-detector.py      # SSRF detector logic
-neuralforger-confidence.py    # Confidence scoring and fusion
-neuralforger-response-ml.py   # Active response ensemble (3 models)
-neuralforger-output.py        # Output formatting (text/json/xml)
-neuralforger-gui.py           # GUI interface
-neuralforger-config.py        # Configuration constants
-neuralforger-banner.py        # Banner display
-neuralforger-test.py          # Integration test suite
+mlssrfinder-main.py          # Entry point
+mlssrfinder-cli.py           # Argument parser
+mlssrfinder-ml.py            # Passive request-level ML analyser
+mlssrfinder-detector.py      # SSRF detector and scoring logic
+mlssrfinder-confidence.py    # Confidence scoring and fusion
+mlssrfinder-response-ml.py   # Active response ensemble (SVM + XGBoost + RF)
+mlssrfinder-output.py        # Output formatting (text / json / xml)
+mlssrfinder-gui.py           # GUI interface
+mlssrfinder-config.py        # Configuration constants
+mlssrfinder-banner.py        # Banner display
+mlssrfinder-test.py          # Integration test suite (65 tests)
+ml-ssrfinder                 # Shell launcher
 
 # SSRFinder core (injection engine)
-main.py / ssrfinder_class.py
-request_parser.py / request_sender.py
-payload_generator.py / injection_handler.py
-confidence_calculator.py / network_parser.py
-url_encoding.py / summary_printer.py
+main.py                      # SSRFinder entry point
+ssrfinder_class.py           # Core scanner class
+request_parser.py            # HTTP request file parser
+request_sender.py            # HTTP request sender
+payload_generator.py         # Payload generation
+injection_handler.py         # Injection point detection and replacement
+confidence_calculator.py     # Base confidence calculator
+network_parser.py            # IP range and port parsing
+url_encoding.py              # URL encoding utilities
+summary_printer.py           # Scan summary output
+response_formatter.py        # Response formatting
 
-# Data & models
-BALANCED_DATASET_40_EXAMPLES.json   # 40-example training corpus
-ssrf_model.json                     # Rule-based model definition
-payload_database.json               # Payload catalog
-svm_rbf_response.pkl                # Trained SVM
-xgboost_response.pkl                # Trained XGBoost
-random_forest_response.pkl          # Trained Random Forest
+# Data and models
+BALANCED_DATASET_40_EXAMPLES.json   # 40-example request-level training corpus
+response_dataset_final.json         # Response-level training dataset
+payload_database.json               # Payload catalogue
+xgboost_request.pkl                 # Trained passive request classifier
+svm_rbf_response.pkl                # Trained SVM response model
+xgboost_response.pkl                # Trained XGBoost response model
+random_forest_response.pkl          # Trained Random Forest response model
 
-# Training scripts (for retraining models)
-train_response_models.py
-retrain_response_models.py
+# Training scripts
+train_response_models.py            # Train the three response ML models
+train_request_model.py              # Train the passive request classifier
+diagnose_pkl.py                     # Diagnostic script for model loading issues
 ```
 
 ---
 
-## Legal & Ethical Use
+## Legal and Ethical Use
 
 This tool is intended for **authorised security testing only**. Only run it against systems you own or have explicit written permission to test. Unauthorised use against third-party systems may violate computer fraud laws in your jurisdiction.
-

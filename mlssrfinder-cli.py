@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Neural Forger - Command-Line Interface Parser (Extension)
+ML-SSRFinder - Command-Line Interface Parser (Extension)
 
-Extends SSRFinder's base CLI with Neural Forger-specific arguments:
+Extends SSRFinder's base CLI with ML-SSRFinder-specific arguments:
 ML inspection mode, payload strategies, output formats, proxy support,
 and the detailed --manual documentation.
 
-Imports SSRFinder's base arguments and adds Neural Forger extras on top.
+Imports SSRFinder's base arguments and adds ML-SSRFinder extras on top.
 """
 
 import argparse
@@ -15,14 +15,14 @@ import os
 import importlib.util
 
 # Import NeuralForger config
-_cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "neuralforger-config.py")
-_spec = importlib.util.spec_from_file_location("neuralforger_config", _cfg_path)
+_cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mlssrfinder-config.py")
+_spec = importlib.util.spec_from_file_location("mlssrfinder_config", _cfg_path)
 _cfg_mod = importlib.util.module_from_spec(_spec)
-if "neuralforger_config" not in sys.modules:
-    sys.modules["neuralforger_config"] = _cfg_mod
+if "mlssrfinder_config" not in sys.modules:
+    sys.modules["mlssrfinder_config"] = _cfg_mod
     _spec.loader.exec_module(_cfg_mod)
 else:
-    _cfg_mod = sys.modules["neuralforger_config"]
+    _cfg_mod = sys.modules["mlssrfinder_config"]
 
 VERSION = _cfg_mod.VERSION
 TOOL_NAME = _cfg_mod.TOOL_NAME
@@ -38,7 +38,7 @@ MANUAL_TEXT = f"""
 
 1. INTRODUCTION
 
-   Neural Forger is an extension for SSRFinder that adds machine learning
+   ML-SSRFinder is an extension for SSRFinder that adds machine learning
    enhanced detection methods. It combines statistical analysis of HTTP
    request structure with SSRFinder's injection testing to produce
    high-confidence vulnerability assessments.
@@ -47,7 +47,7 @@ MANUAL_TEXT = f"""
    - Inspection mode (-i): ML-only analysis without injection
    - Injection mode (-p): Full payload testing with ML augmentation
 
-   Neural Forger reuses SSRFinder's core modules (request parsing,
+   ML-SSRFinder reuses SSRFinder's core modules (request parsing,
    payload generation, network utilities) and extends them with:
    - ML-based pre-analysis and parameter discovery
    - Combined ML + injection confidence scoring
@@ -72,7 +72,7 @@ MANUAL_TEXT = f"""
 
    2.2 Parameter Discovery
 
-   Neural Forger automatically discovers injectable parameters from:
+   ML-SSRFinder automatically discovers injectable parameters from:
    - URL query string parameters
    - Form-encoded body parameters
    - JSON body fields
@@ -99,28 +99,28 @@ MANUAL_TEXT = f"""
 
    3.1 Reconnaissance (Inspection Only)
 
-       neuralforger -r captured_request.txt -i
+       ml-ssrfinder -r captured_request.txt -i
 
    3.2 Targeted Injection Testing
 
-       neuralforger -r captured_request.txt -p url
+       ml-ssrfinder -r captured_request.txt -p url
 
    3.3 Direct URL Testing
 
-       neuralforger -u "http://target.com/api/fetch?url=SSRF" -p url
+       ml-ssrfinder -u "http://target.com/api/fetch?url=SSRF" -p url
 
    3.4 IP Range Scanning
 
-       neuralforger -r request.txt -p url --ip-range 192.168.1.1-254
+       ml-ssrfinder -r request.txt -p url --ip-range 192.168.1.1-254
 
    3.5 Single IP Port Scan
 
-       neuralforger -r request.txt -p url --ip 192.168.1.5
+       ml-ssrfinder -r request.txt -p url --ip 192.168.1.5
 
    3.6 Payload Strategy Selection
 
-       neuralforger -r request.txt -p url --payload-strategy ml-only
-       neuralforger -r request.txt -p url --payload-strategy all
+       ml-ssrfinder -r request.txt -p url --payload-strategy ml-only
+       ml-ssrfinder -r request.txt -p url --payload-strategy all
 
 4. CONFIDENCE LEVELS
 
@@ -137,7 +137,7 @@ MANUAL_TEXT = f"""
    2  - Vulnerability confirmed (at least one HIGH confidence result)
 
 {'=' * 72}
-Neural Forger v{VERSION} (SSRFinder Extension)
+ML-SSRFinder v{VERSION} (SSRFinder Extension)
 """
 
 
@@ -153,9 +153,9 @@ class NeuralForgerHelpFormatter(argparse.RawDescriptionHelpFormatter):
 
 def create_argument_parser() -> argparse.ArgumentParser:
     """
-    Create the Neural Forger argument parser.
+    Create the ML-SSRFinder argument parser.
 
-    Includes all SSRFinder base arguments plus Neural Forger extensions:
+    Includes all SSRFinder base arguments plus ML-SSRFinder extensions:
     --inspect, --payload-strategy, --confidence-threshold, --proxy,
     --threads, --format, --output, --manual, --verbose.
 
@@ -163,13 +163,13 @@ def create_argument_parser() -> argparse.ArgumentParser:
         Configured argparse.ArgumentParser instance.
     """
     parser = argparse.ArgumentParser(
-        prog="neuralforger",
+        prog="ml-ssrfinder",
         description=(
             f"{TOOL_NAME} - ML-Powered SSRF Detection Framework\n"
             f"Version {VERSION} (SSRFinder Extension)\n"
             "\n"
             "DESCRIPTION:\n"
-            "  Neural Forger extends SSRFinder with machine learning\n"
+            "  ML-SSRFinder extends SSRFinder with machine learning\n"
             "  analysis for enhanced SSRF vulnerability detection.\n"
             "  It operates in two stages: ML-based pre-analysis and\n"
             "  detailed injection testing using SSRFinder's core engine.\n"
