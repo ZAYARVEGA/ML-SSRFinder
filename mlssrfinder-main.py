@@ -412,8 +412,12 @@ def run_injection_mode(
     # Initialize Response ML Analyzer if --response-ml is active
     response_ml_analyzer = None
     if hasattr(args, 'response_ml') and args.response_ml:
+        decision_mode = 'svm_rbf'
+        if getattr(args, 'response_decision', 'svm') == 'ensemble':
+            decision_mode = 'ensemble'
         response_ml_analyzer = response_ml_mod.ResponseMLAnalyzer(
             models_dir=_BASE_DIR,
+            decision_mode=decision_mode,
         )
         if not response_ml_analyzer.is_available():
             out.warning("No response ML models found. --response-ml disabled.")
