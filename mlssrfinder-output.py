@@ -390,6 +390,26 @@ class OutputFormatter:
             f"-> {result.ensemble_confidence:.1f}% SSRF"
         )
 
+        # Primary decision source (defaults to the strongest single model).
+        decision_mode = getattr(result, 'decision_mode', 'ensemble')
+        if decision_mode != 'ensemble':
+            dec_positive = getattr(result, 'decision_positive', result.ensemble_positive)
+            dec_conf = getattr(result, 'decision_confidence', result.ensemble_confidence)
+            dec_label = 'POSITIVE' if dec_positive else 'NEGATIVE'
+            if self.use_color:
+                dec_color = Fore.RED if dec_positive else Fore.GREEN
+                print(f"      {'Decision':<15}: "
+                      f"{dec_color}{dec_label} (model: {decision_mode}) "
+                      f"-> {dec_conf:.1f}% SSRF{Style.RESET_ALL}")
+            else:
+                print(f"      {'Decision':<15}: "
+                      f"{dec_label} (model: {decision_mode}) "
+                      f"-> {dec_conf:.1f}% SSRF")
+            self._write_to_file(
+                f"      {'Decision':<15}: {dec_label} (model: {decision_mode}) "
+                f"-> {dec_conf:.1f}% SSRF"
+            )
+
     def _print_content_findings(self, content_analysis) -> None:
         """
         Print content analysis findings (sensitive data detected in response).

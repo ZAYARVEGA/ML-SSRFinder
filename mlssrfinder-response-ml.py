@@ -49,6 +49,14 @@ MODEL_FILES = {
     'random_forest': 'random_forest_response.pkl',
 }
 
+# Default response-level decision source. The SVM-RBF model is the strongest
+# single classifier on the response corpus (highest leave-one-out accuracy,
+# balanced accuracy, and MCC), and empirically the majority-vote ensemble does
+# not improve on it on this corpus. The SVM is therefore the default verdict.
+# The full ensemble is still computed and reported, and can be selected with
+# decision_mode='ensemble' (CLI: --response-decision ensemble).
+DEFAULT_DECISION_MODE = 'svm_rbf'
+
 
 # ============================================================================
 # Response body analysis helpers
@@ -865,13 +873,22 @@ class ResponseMLVerdict:
 
 @dataclass
 class ResponseMLResult:
-    """Ensemble result from all loaded response models."""
+    """Ensemble result from all loaded response models.
+
+    The ensemble fields (majority vote and LOO-accuracy-weighted confidence)
+    are always computed and reported for transparency. The decision fields
+    carry the value actually used by the framework's confidence fusion, which
+    defaults to the strongest single model (SVM-RBF) rather than the ensemble.
+    """
     verdicts: List[ResponseMLVerdict]
     ensemble_positive: bool       # majority vote (>=2 of 3)
     ensemble_confidence: float    # weighted average by LOO accuracy
     positive_count: int
     negative_count: int
     analysis_time_ms: float
+    decision_mode: str = DEFAULT_DECISION_MODE   # 'svm_rbf' or 'ensemble'
+    decision_positive: bool = False              # verdict used downstream
+    decision_confidence: float = 0.0             # confidence used downstream
 
 
 # ============================================================================
@@ -884,7 +901,7 @@ class ResponseMLAnalyzer:
     on HTTP responses received after payload injection.
     """
 
-    def __init__(self, models_dir: str = '.'):
+    def __init__(self, models_dir: str = '.', decision_mode: str = DEFAULT_DECISION_MODE):
         """
         Load all available response ML models.
 
@@ -896,9 +913,13 @@ class ResponseMLAnalyzer:
 
         Args:
             models_dir: Primary directory to search for .pkl model files.
+            decision_mode: Source of the verdict used downstream. Either a
+                single model name (default 'svm_rbf', the strongest model) or
+                'ensemble' to use the majority vote and weighted confidence.
         """
         self._models: Dict[str, dict] = {}
         self._load_errors: List[str] = []
+        self.decision_mode = decision_mode
 
         # Build list of candidate directories to search
         _this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -1029,6 +1050,19 @@ class ResponseMLAnalyzer:
         else:
             ensemble_confidence = sum(v.confidence_pct for v in verdicts) / len(verdicts)
 
+        # Decision source: by default the strongest single model (SVM-RBF).
+        # Fall back to the ensemble if that model is unavailable or the mode
+        # is explicitly 'ensemble'.
+        decision_mode = self.decision_mode
+        primary = next((v for v in verdicts if v.model_name == decision_mode), None)
+        if decision_mode != 'ensemble' and primary is not None:
+            decision_positive = primary.prediction
+            decision_confidence = primary.confidence_pct
+        else:
+            decision_mode = 'ensemble'
+            decision_positive = ensemble_positive
+            decision_confidence = round(ensemble_confidence, 1)
+
         return ResponseMLResult(
             verdicts=verdicts,
             ensemble_positive=ensemble_positive,
@@ -1036,6 +1070,9 @@ class ResponseMLAnalyzer:
             positive_count=positive_count,
             negative_count=negative_count,
             analysis_time_ms=round(elapsed_ms, 2),
+            decision_mode=decision_mode,
+            decision_positive=decision_positive,
+            decision_confidence=decision_confidence,
         )
 
     def _predict_single(

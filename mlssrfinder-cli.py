@@ -291,6 +291,20 @@ def create_argument_parser() -> argparse.ArgumentParser:
             'confirm SSRF. Requires -p (injection mode). Active scan.'
         ),
     )
+    payloads.add_argument(
+        '--response-decision',
+        metavar='SOURCE',
+        type=str,
+        default='svm',
+        choices=['svm', 'ensemble'],
+        dest='response_decision',
+        help=(
+            'Which response model decides the verdict when --response-ml is\n'
+            'active: svm (default, strongest single model) or ensemble\n'
+            '(majority vote of the three models). All three models are\n'
+            'always run and reported regardless of this choice.'
+        ),
+    )
 
     # -- Advanced options (NF extensions) --
     advanced = parser.add_argument_group("ADVANCED OPTIONS")

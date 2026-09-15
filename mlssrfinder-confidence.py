@@ -241,10 +241,19 @@ def build_confidence_result(
     combined = None
 
     if response_ml_result is not None:
-        # Active mode: response ML is the dominant signal
-        response_ml_confidence = response_ml_result.ensemble_confidence
+        # Active mode: response ML is the dominant signal. Use the primary
+        # decision (default: the SVM-RBF model) rather than the ensemble, which
+        # does not improve on the best single model on the response corpus.
+        # Fall back to the ensemble fields for backward compatibility.
+        response_ml_confidence = getattr(
+            response_ml_result, "decision_confidence", None)
+        if response_ml_confidence is None:
+            response_ml_confidence = response_ml_result.ensemble_confidence
+        response_ml_positive = getattr(
+            response_ml_result, "decision_positive", None)
+        if response_ml_positive is None:
+            response_ml_positive = response_ml_result.ensemble_positive
         response_ml_verdicts = response_ml_result.verdicts
-        response_ml_positive = response_ml_result.ensemble_positive
 
         combined = calculate_combined_confidence_active(
             injection_confidence=inj_conf,
