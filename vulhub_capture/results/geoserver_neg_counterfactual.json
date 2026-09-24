@@ -1,0 +1,15 @@
+{
+  "status_code": 200,
+  "response_time_ms": 8.3,
+  "response_size_bytes": 199,
+  "headers": {
+    "Connection": "close",
+    "X-Frame-Options": "SAMEORIGIN",
+    "Content-Type": "application/xml;charset=iso-8859-1",
+    "Content-Length": "199",
+    "Server": "Jetty(9.4.36.v20210114)"
+  },
+  "content_type": "application/xml;charset=iso-8859-1",
+  "body_excerpt": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<servlet-exception>\njava.lang.IllegalStateException: Invalid url requested, the demo requests should be hitting: http://localhost/geoserver</servlet-exception>\n",
+  "body_len_chars": 199
+}

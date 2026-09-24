@@ -12,3 +12,8 @@ build/
 .vscode/
 *.swp
 _test_request.txt
+
+# Peer-review materials (confidential / internal — never publish)
+REVIEWER2_DETAILED_REPORT.txt
+R2-*_RESPONSE_DRAFT.md
+*.BACKUP.*

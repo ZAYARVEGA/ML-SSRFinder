@@ -1,0 +1,14 @@
+{
+  "status_code": 200,
+  "response_time_ms": 6.2,
+  "response_size_bytes": 1097,
+  "headers": {
+    "Host": "127.0.0.1:80",
+    "Connection": "close",
+    "X-Powered-By": "PHP/7.0.30",
+    "Content-type": "text/html; charset=UTF-8"
+  },
+  "content_type": null,
+  "body_excerpt": "DOMDocument Object\n(\n    [doctype] => (object value omitted)\n    [implementation] => (object value omitted)\n    [documentElement] => (object value omitted)\n    [actualEncoding] => utf-8\n    [encoding] => utf-8\n    [xmlEncoding] => utf-8\n    [standalone] => 1\n    [xmlStandalone] => 1\n    [version] => 1.0\n    [xmlVersion] => 1.0\n    [strictErrorChecking] => 1\n    [documentURI] => /var/www/html/\n    [config] => \n    [formatOutput] => \n    [validateOnParse] => \n    [resolveExternals] => \n    [preserveWhiteSpace] => 1\n    [recover] => \n    [substituteEntities] => \n    [nodeName] => #document\n    [n",
+  "body_len_chars": 1097
+}

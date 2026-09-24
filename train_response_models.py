@@ -21,6 +21,7 @@ warnings.filterwarnings('ignore')
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import StratifiedKFold, cross_val_score, LeaveOneOut
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score,
@@ -197,21 +198,26 @@ loo = LeaveOneOut()
 skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
 def evaluate_model(model, X, y, model_name, needs_scaling=False):
-    """Full evaluation: LOO-CV + Stratified 5-Fold + final fit."""
+    """Full evaluation: LOO-CV + Stratified 5-Fold + final fit.
+
+    R2-8 fix: the StandardScaler is now fit INSIDE each fold, never on the whole
+    dataset before splitting. Fitting the scaler once on all rows (the previous
+    behaviour) leaks test-fold statistics into training and inflates the SVM
+    score. During evaluation we therefore refit a fresh scaler per fold; the
+    scaler stored with the deployed model is fit on all training data, which is
+    correct because at deployment there is no held-out fold.
+    """
     X_arr = X.values
 
-    if needs_scaling:
-        scaler = StandardScaler()
-        X_arr = scaler.fit_transform(X_arr)
-    else:
-        scaler = None
-
-    # LOO-CV
+    # LOO-CV (scaler refit within each fold)
     loo_preds = []
     loo_true  = []
     for train_idx, test_idx in loo.split(X_arr):
         Xtr, Xte = X_arr[train_idx], X_arr[test_idx]
         ytr, yte = y[train_idx], y[test_idx]
+        if needs_scaling:
+            fold_scaler = StandardScaler().fit(Xtr)
+            Xtr, Xte = fold_scaler.transform(Xtr), fold_scaler.transform(Xte)
         m = type(model)(**model.get_params())
         m.fit(Xtr, ytr)
         loo_preds.append(m.predict(Xte)[0])
@@ -223,15 +229,26 @@ def evaluate_model(model, X, y, model_name, needs_scaling=False):
     loo_f1   = f1_score(loo_true, loo_preds, zero_division=0)
     loo_cm   = confusion_matrix(loo_true, loo_preds)
 
-    # 5-Fold CV
-    skf_acc  = cross_val_score(model, X_arr, y, cv=skf, scoring='accuracy').mean()
-    skf_f1   = cross_val_score(model, X_arr, y, cv=skf, scoring='f1').mean()
-    skf_prec = cross_val_score(model, X_arr, y, cv=skf, scoring='precision').mean()
-    skf_rec  = cross_val_score(model, X_arr, y, cv=skf, scoring='recall').mean()
+    # 5-Fold CV: wrap scaling + model in a pipeline so the scaler is fit on the
+    # training part of each fold only, never on the held-out part.
+    cv_estimator = make_pipeline(StandardScaler(), type(model)(**model.get_params())) \
+        if needs_scaling else model
+    skf_acc  = cross_val_score(cv_estimator, X_arr, y, cv=skf, scoring='accuracy').mean()
+    skf_f1   = cross_val_score(cv_estimator, X_arr, y, cv=skf, scoring='f1').mean()
+    skf_prec = cross_val_score(cv_estimator, X_arr, y, cv=skf, scoring='precision').mean()
+    skf_rec  = cross_val_score(cv_estimator, X_arr, y, cv=skf, scoring='recall').mean()
 
-    # Final fit on all data
-    model.fit(X_arr, y)
-    train_acc = accuracy_score(y, model.predict(X_arr))
+    # Final fit on all data. The deployed scaler is fit on all training rows
+    # (correct: no held-out fold exists at deployment) and stored alongside the
+    # model, so the .pkl keeps the same {model, scaler, needs_scaling} shape.
+    if needs_scaling:
+        scaler = StandardScaler().fit(X_arr)
+        X_fit = scaler.transform(X_arr)
+    else:
+        scaler = None
+        X_fit = X_arr
+    model.fit(X_fit, y)
+    train_acc = accuracy_score(y, model.predict(X_fit))
 
     return {
         'model_name':    model_name,

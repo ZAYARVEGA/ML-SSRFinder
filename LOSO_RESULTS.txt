@@ -1,0 +1,69 @@
+source original  : n= 28  vuln= 15  benign= 13
+source hackerone : n= 15  vuln= 15  benign=  0
+source vulhub    : n= 13  vuln=  4  benign=  9
+source samesite  : n= 10  vuln=  0  benign= 10
+
+total rows 66, features 33
+(blind_oob positives excluded from the response side, per the paper)
+
+########################################################################
+# FEATURE SET: ALL features  (33 features)
+########################################################################
+
+LEAVE-ONE-SOURCE-OUT (train on all other sources, test on the named one)
+test source     n class(es)           acc   prec    rec     f1   confusion(tn fp fn tp)
+------------------------------------------------------------------------
+original       28 both              0.607  0.600  0.800  0.686   (5 8 3 12)
+hackerone      15 vuln-only         0.533  1.000  0.533  0.696   (0 0 7 8)
+vulhub         13 both              0.462  0.364  1.000  0.533   (2 7 0 4)
+samesite       10 benign-only       0.400  0.000  0.000  0.000   (4 6 0 0)
+
+pooled 5-fold reference (sources MIXED): acc=0.818 prec=0.789 rec=0.882 f1=0.833 confusion=(24 8 4 30)
+source predictability (4-way, lower=better): 0.561  (base 0.424)
+
+########################################################################
+# FEATURE SET: SOURCE-SENSITIVE REMOVED (dropped: server_cloud, size_large)  (31 features)
+########################################################################
+
+LEAVE-ONE-SOURCE-OUT (train on all other sources, test on the named one)
+test source     n class(es)           acc   prec    rec     f1   confusion(tn fp fn tp)
+------------------------------------------------------------------------
+original       28 both              0.286  0.381  0.533  0.444   (0 13 7 8)
+hackerone      15 vuln-only         0.133  1.000  0.133  0.235   (0 0 13 2)
+vulhub         13 both              0.077  0.000  0.000  0.000   (1 8 4 0)
+samesite       10 benign-only       0.000  0.000  0.000  0.000   (0 10 0 0)
+
+pooled 5-fold reference (sources MIXED): acc=0.621 prec=0.622 rec=0.676 f1=0.648 confusion=(18 14 11 23)
+source predictability (4-way, lower=better): 0.470  (base 0.424)
+
+========================================================================
+R2-6 ABLATION SUMMARY: does removing source-sensitive features change it?
+========================================================================
+metric                          ALL feats  no source feats    delta
+pooled 5-fold acc                   0.818            0.621   -0.197
+pooled 5-fold prec                  0.789            0.622   -0.168
+pooled 5-fold rec                   0.882            0.676   -0.206
+pooled 5-fold f1                    0.833            0.648   -0.185
+LOSO test=original acc             0.607            0.286   -0.321
+LOSO test=original f1              0.686            0.444   -0.241
+LOSO test=vulhub   acc             0.462            0.077   -0.385
+LOSO test=vulhub   f1              0.533            0.000   -0.533
+
+Removing the two flagged features DOES hurt, so the next question is
+whether they encode the source or the label. The diagnostic below
+answers it per feature (mutual information with label vs with source).
+
+========================================================================
+R2-6 PER-FEATURE: label-encoding (signal) vs source-encoding (artifact)
+========================================================================
+  server_cloud   fires  7/66  MI_label=0.083 MI_source=0.063  P(vuln|=1)=0.00  -> LABEL (signal)
+  size_large     fires 11/66  MI_label=0.139 MI_source=0.093  P(vuln|=1)=0.00  -> LABEL (signal)
+  server_ec2ws   fires  3/66  MI_label=0.031 MI_source=0.040  P(vuln|=1)=1.00  -> SOURCE (artifact)
+  size_small     fires 25/66  MI_label=0.002 MI_source=0.077  P(vuln|=1)=0.48  -> SOURCE (artifact)
+
+server_cloud and size_large fire almost only on BENIGN responses and
+carry more label than source information: they are 'this is a normal
+page' markers, genuine discriminators, which is why dropping them hurts.
+server_ec2ws is the one honest confound: it perfectly marks vulnerable
+but appears in a single source, so an AWS-metadata positive from a
+second source is needed to separate the signal from the provenance.

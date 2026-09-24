@@ -1,0 +1,20 @@
+{
+  "status_code": 200,
+  "response_time_ms": 6.2,
+  "response_size_bytes": 105,
+  "headers": {
+    "Content-Security-Policy": "sandbox",
+    "Content-Type": "application/json",
+    "Date": "Thu, 24 Sep 2026 14:36:01 GMT",
+    "Server": "BaseHTTP/0.6 Python/3.14.6",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "deny",
+    "X-Internal-Service": "metadata-v1",
+    "X-Xss-Protection": "1; mode=block",
+    "Connection": "close",
+    "Transfer-Encoding": "chunked"
+  },
+  "content_type": "application/json",
+  "body_excerpt": "{\"iam\": {\"role\": \"internal-svc\"}, \"secret_token\": \"INTERNAL-DEMO-TOKEN-abc123\", \"private_ip\": \"10.0.0.5\"}",
+  "body_len_chars": 105
+}
