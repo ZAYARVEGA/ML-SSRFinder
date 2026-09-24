@@ -1,0 +1,15 @@
+{
+  "status_code": 500,
+  "response_time_ms": 3.5,
+  "response_size_bytes": 265,
+  "headers": {
+    "Connection": "close",
+    "Date": "Thu, 24 Sep 2026 14:40:21 GMT",
+    "Content-Type": "text/xml;charset=iso-8859-1",
+    "Content-Length": "265",
+    "Server": "Jetty(9.4.27.v20200227)"
+  },
+  "content_type": "text/xml;charset=iso-8859-1",
+  "body_excerpt": "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><soap:Fault><faultcode>soap:Client</faultcode><faultstring>Unmarshalling Error: No attachment for  id nothing-benign found in [] </faultstring></soap:Fault></soap:Body></soap:Envelope>",
+  "body_len_chars": 265
+}

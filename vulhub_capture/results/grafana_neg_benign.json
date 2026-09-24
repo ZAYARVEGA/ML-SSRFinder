@@ -1,0 +1,20 @@
+{
+  "status_code": 200,
+  "response_time_ms": 5.6,
+  "response_size_bytes": 70,
+  "headers": {
+    "Cache-Control": "no-cache",
+    "Content-Type": "application/json; charset=UTF-8",
+    "Expires": "-1",
+    "Pragma": "no-cache",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "deny",
+    "X-Xss-Protection": "1; mode=block",
+    "Date": "Thu, 24 Sep 2026 14:36:01 GMT",
+    "Content-Length": "70",
+    "Connection": "close"
+  },
+  "content_type": "application/json; charset=UTF-8",
+  "body_excerpt": "{\n  \"commit\": \"78ee958143\",\n  \"database\": \"ok\",\n  \"version\": \"8.5.4\"\n}",
+  "body_len_chars": 70
+}

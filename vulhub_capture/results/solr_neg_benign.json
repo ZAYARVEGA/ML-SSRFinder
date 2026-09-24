@@ -1,0 +1,17 @@
+{
+  "status_code": 200,
+  "response_time_ms": 21.5,
+  "response_size_bytes": 267,
+  "headers": {
+    "Connection": "close",
+    "Content-Security-Policy": "default-src 'none'; base-uri 'none'; connect-src 'self'; form-action 'self'; font-src 'self'; frame-ancestors 'none'; img-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self';",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "SAMEORIGIN",
+    "X-XSS-Protection": "1; mode=block",
+    "Content-Type": "text/plain;charset=utf-8",
+    "Content-Length": "267"
+  },
+  "content_type": "text/plain;charset=utf-8",
+  "body_excerpt": "{\n  \"responseHeader\":{\n    \"zkConnected\":null,\n    \"status\":0,\n    \"QTime\":20,\n    \"params\":{\n      \"q\":\"{!lucene}*:*\",\n      \"distrib\":\"false\",\n      \"df\":\"_text_\",\n      \"rows\":\"10\",\n      \"wt\":\"json\",\n      \"echoParams\":\"all\",\n      \"rid\":\"-0\"}},\n  \"status\":\"OK\"}\n",
+  "body_len_chars": 267
+}

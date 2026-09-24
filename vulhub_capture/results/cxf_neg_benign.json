@@ -1,0 +1,15 @@
+{
+  "status_code": 200,
+  "response_time_ms": 25.1,
+  "response_size_bytes": 2434,
+  "headers": {
+    "Connection": "close",
+    "Date": "Thu, 24 Sep 2026 14:40:21 GMT",
+    "Content-Type": "text/xml;charset=utf-8",
+    "Content-Length": "2434",
+    "Server": "Jetty(9.4.27.v20200227)"
+  },
+  "content_type": "text/xml;charset=utf-8",
+  "body_excerpt": "<?xml version='1.0' encoding='UTF-8'?><wsdl:definitions xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:wsdl=\"http://schemas.xmlsoap.org/wsdl/\" xmlns:tns=\"http://service.namespace/\" xmlns:soap=\"http://schemas.xmlsoap.org/wsdl/soap/\" xmlns:ns1=\"http://schemas.xmlsoap.org/soap/http\" name=\"TestService\" targetNamespace=\"http://service.namespace/\">\n  <wsdl:types>\n<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:tns=\"http://service.namespace/\" elementFormDefault=\"unqualified\" targetNamespace=\"http://service.namespace/\" version=\"1.0\">\n\n  <xs:element name=\"test\" type=\"tns:test\"/>\n\n  <xs",
+  "body_len_chars": 2434
+}
