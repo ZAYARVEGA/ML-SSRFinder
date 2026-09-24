@@ -1,0 +1,17 @@
+{
+  "status_code": 200,
+  "response_time_ms": 13.6,
+  "response_size_bytes": 682,
+  "headers": {
+    "Connection": "close",
+    "Content-Security-Policy": "default-src 'none'; base-uri 'none'; connect-src 'self'; form-action 'self'; font-src 'self'; frame-ancestors 'none'; img-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self';",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "SAMEORIGIN",
+    "X-XSS-Protection": "1; mode=block",
+    "Content-Type": "application/json;charset=utf-8",
+    "Content-Length": "682"
+  },
+  "content_type": "application/json;charset=utf-8",
+  "body_excerpt": "{\n  \"responseHeader\":{\n    \"status\":0,\n    \"QTime\":5,\n    \"handler\":\"org.apache.solr.handler.DumpRequestHandler\",\n    \"params\":{\n      \"param\":\"ContentStreams\",\n      \"stream.url\":\"http://127.0.0.1:9999/\"}},\n  \"params\":{\n    \"stream.url\":\"http://127.0.0.1:9999/\",\n    \"echoHandler\":\"true\",\n    \"param\":\"ContentStreams\",\n    \"echoParams\":\"explicit\"},\n  \"streams\":[{\n      \"name\":null,\n      \"sourceInfo\":\"url\",\n      \"size\":null,\n      \"contentType\":null,\n      \"stream\":\"{\\\"iam\\\": {\\\"role\\\": \\\"internal-svc\\\"}, \\\"secret_token\\\": \\\"INTERNAL-DEMO-TOKEN-abc123\\\", \\\"private_ip\\\": \\\"10.0.0.5\\\"}\"}],\n  \"co",
+  "body_len_chars": 682
+}

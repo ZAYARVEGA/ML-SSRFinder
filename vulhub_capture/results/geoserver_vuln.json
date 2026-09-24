@@ -1,0 +1,15 @@
+{
+  "status_code": 200,
+  "response_time_ms": 9.7,
+  "response_size_bytes": 105,
+  "headers": {
+    "Connection": "close",
+    "X-Frame-Options": "SAMEORIGIN",
+    "Content-Type": "application/json",
+    "Content-Length": "105",
+    "Server": "Jetty(9.4.36.v20210114)"
+  },
+  "content_type": "application/json",
+  "body_excerpt": "{\"iam\": {\"role\": \"internal-svc\"}, \"secret_token\": \"INTERNAL-DEMO-TOKEN-abc123\", \"private_ip\": \"10.0.0.5\"}",
+  "body_len_chars": 105
+}

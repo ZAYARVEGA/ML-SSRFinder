@@ -1,0 +1,15 @@
+{
+  "status_code": 500,
+  "response_time_ms": 44.5,
+  "response_size_bytes": 371,
+  "headers": {
+    "Connection": "close",
+    "Date": "Thu, 24 Sep 2026 14:40:21 GMT",
+    "Content-Type": "text/xml;charset=iso-8859-1",
+    "Content-Length": "371",
+    "Server": "Jetty(9.4.27.v20200227)"
+  },
+  "content_type": "text/xml;charset=iso-8859-1",
+  "body_excerpt": "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><soap:Fault><faultcode>soap:Client</faultcode><faultstring>Unmarshalling Error: Not a number: eyJpYW0iOiB7InJvbGUiOiAiaW50ZXJuYWwtc3ZjIn0sICJzZWNyZXRfdG9rZW4iOiAiSU5URVJOQUwtREVNTy1UT0tFTi1hYmMxMjMiLCAicHJpdmF0ZV9pcCI6ICIxMC4wLjAuNSJ9 </faultstring></soap:Fault></soap:Body></soap:Envelope>",
+  "body_len_chars": 371
+}
