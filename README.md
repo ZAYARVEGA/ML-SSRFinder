@@ -5,7 +5,7 @@
 ML-SSRFinder is a command-line tool for detecting Server-Side Request Forgery (SSRF) vulnerabilities. It extends a core HTTP injection engine with two machine learning layers:
 
 - **Passive mode** (`-i`): analyses the HTTP request structure with a rule-based scorer and a trained XGBoost classifier to rank injection candidates — no traffic is sent to the target.
-- **Active mode** (`-p`): injects payloads via the built-in injection engine, then runs an ensemble of three ML models (SVM, XGBoost, Random Forest) on every HTTP response to confirm exploitation.
+- **Active mode** (`-p`): injects payloads via the built-in injection engine, then scores every HTTP response with three ML models (SVM, XGBoost, Random Forest); the SVM, the strongest single model, decides the verdict by default, with the majority-vote ensemble available as a selectable option.
 
 ---
 
@@ -86,7 +86,7 @@ python3 mlssrfinder-main.py -r request.txt -p url
 
 ### Step 4 — Active injection with response ML
 
-Run the full pipeline: injection + 3-model ensemble analysis on every response:
+Run the full pipeline: injection + response-level ML analysis (SVM decides by default) on every response:
 
 ```bash
 python3 mlssrfinder-main.py -r request.txt -p url --response-ml
@@ -131,7 +131,8 @@ python3 mlssrfinder-main.py [options]
 
 | Flag | Description |
 |------|-------------|
-| `--response-ml` | Enable 3-model response ensemble after injection |
+| `--response-ml` | Enable response-level ML analysis after injection (scores with SVM, XGBoost, and Random Forest) |
+| `--response-decision SOURCE` | Which response model decides the verdict: `svm` (default, strongest single model) or `ensemble` (majority vote of all three) |
 | `--confidence-threshold N` | Minimum ML confidence % to proceed with injection (default: `70`) |
 
 ### Network Options
@@ -180,8 +181,11 @@ python3 mlssrfinder-main.py -r request.txt -i -v
 # Inject into 'url' with default ML-recommended payloads
 python3 mlssrfinder-main.py -r request.txt -p url
 
-# Full active scan: injection + response ML confirmation
+# Full active scan: injection + response ML confirmation (SVM decides by default)
 python3 mlssrfinder-main.py -r request.txt -p url --response-ml
+
+# Same, but let the majority-vote ensemble decide instead of the SVM
+python3 mlssrfinder-main.py -r request.txt -p url --response-ml --response-decision ensemble
 
 # Save results as JSON
 python3 mlssrfinder-main.py -r request.txt -p url --format json -o results.json
@@ -228,23 +232,23 @@ python3 mlssrfinder-main.py -r request.txt -p url -q --format json | jq .
 
 **Passive mode** fuses scores as: `0.70 × injection score + 0.30 × ML score`
 
-**Active mode** (`--response-ml`) shifts weight to favour direct response evidence: `0.60 × response ensemble + 0.30 × injection + 0.10 × ML`
+**Active mode** (`--response-ml`) shifts weight to favour direct response evidence: `0.60 × response model (SVM by default) + 0.30 × injection + 0.10 × ML`
 
 ---
 
 ## Response ML Models
 
-When `--response-ml` is active, three models analyse each HTTP response:
+When `--response-ml` is active, three models score each HTTP response:
 
 | Model | LOO Accuracy |
 |-------|-------------|
-| SVM (RBF kernel) | 82.1% |
+| SVM (RBF kernel) | 85.7% |
 | Random Forest | 67.9% |
 | XGBoost | 64.3% |
 
-The ensemble decides by **majority vote** (binary verdict) and **accuracy-weighted average** of calibrated probabilities (confidence value).
+By default the **SVM**, the strongest single model, decides the verdict. Pass `--response-decision ensemble` to instead use the three-model majority vote (binary verdict) with an **accuracy-weighted average** of calibrated probabilities as the confidence value; on the evaluation corpus the ensemble does not outperform the SVM alone.
 
-A deterministic content-analysis module runs in parallel and can override the ensemble when it detects unambiguous indicators:
+A deterministic content-analysis module runs in parallel and can override the response-model verdict when it detects unambiguous indicators:
 
 - Cloud provider metadata (AWS IMDSv1/v2, GCP, Azure)
 - Leaked credentials or IAM tokens
@@ -294,7 +298,7 @@ mlssrfinder-cli.py           # Argument parser
 mlssrfinder-ml.py            # Passive request-level ML analyser
 mlssrfinder-detector.py      # SSRF detector and scoring logic
 mlssrfinder-confidence.py    # Confidence scoring and fusion
-mlssrfinder-response-ml.py   # Active response ensemble (SVM + XGBoost + RF)
+mlssrfinder-response-ml.py   # Active response ML (SVM default decision; XGBoost + RF scored in parallel)
 mlssrfinder-output.py        # Output formatting (text / json / xml)
 mlssrfinder-gui.py           # GUI interface
 mlssrfinder-config.py        # Configuration constants
